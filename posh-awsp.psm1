@@ -121,7 +121,7 @@ function Set-AwsProfile {
     [Parameter(Mandatory=$false, Position=1)]
     [string] $ProfileName,
     [Parameter(Mandatory=$false)]
-    [switch] $Persist
+    [switch] $Persist = $true
   )
 
   $profiles = Get-AwsProfilesList
