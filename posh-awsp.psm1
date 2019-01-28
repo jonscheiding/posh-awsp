@@ -2,7 +2,7 @@ $USER_HOME = $Env:HOMEDRIVE + $Env:HOMEPATH
 $AWS_HOME = Join-Path $USER_HOME ".aws"
 $AWS_CONFIG_FILE = Join-Path $AWS_HOME "config"
 
-function Get-AwsProfilesList {
+function Get-AwsProfiles {
   if(!(Test-Path $AWS_CONFIG_FILE -PathType Leaf)) {
     Throw "AWS CLI config file $AWS_CONFIG_FILE doesn't exist.  Run 'aws configure' to create it."
   }
@@ -124,7 +124,7 @@ function Set-AwsProfile {
     [switch] $Persist = $true
   )
 
-  $profiles = Get-AwsProfilesList
+  $profiles = Get-AwsProfiles
 
   if($ProfileName) {
     Test-AwsProfileName -Profiles $Profiles -ProfileName $ProfileName
@@ -157,4 +157,5 @@ function Update-AwsProfile {
   Get-AwsProfile
 }
 
-Export-ModuleMember -Function *-AwsProfile
+Export-ModuleMember -Function *-AwsProfile,*-AwsProfiles
+
