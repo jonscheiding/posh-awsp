@@ -51,7 +51,7 @@ function Show-Menu {
     Write-Host "$indicator $index)" $Profiles[$index]
   }
 
-  while($selectedItem -eq $null) {
+  while($null -eq $selectedItem) {
     $moveBy = 0
     $Response = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
   
@@ -121,7 +121,7 @@ function Set-AwsProfile {
     [Parameter(Mandatory=$false, Position=1)]
     [string] $ProfileName,
     [Parameter(Mandatory=$false)]
-    [switch] $Persist = $true
+    [switch] $Transient = $false
   )
 
   $profiles = Get-AwsProfiles
@@ -140,7 +140,7 @@ function Set-AwsProfile {
 
   $Env:AWS_PROFILE = $ProfileName
 
-  if($Persist) {
+  if(!$Transient) {
     Write-Host "Persisting selection."
     Write-Host "Note: Will not affect currently running shells. Run 'Update-AwsProfile' to refresh them."
     
