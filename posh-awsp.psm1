@@ -142,7 +142,7 @@ function Set-AwsProfile {
 
   if(!$Transient) {
     Write-Host "Persisting selection."
-    Write-Host "Note: Will not affect currently running shells. Run 'Update-AwsProfile' to refresh them."
+    Write-Host "Note: Will not affect other open running shells. Run 'Update-AwsProfile' to refresh them."
     
     [Environment]::SetEnvironmentVariable("AWS_PROFILE", $ProfileName, [System.EnvironmentVariableTarget]::User)
   }
@@ -156,6 +156,3 @@ function Update-AwsProfile {
 
   Get-AwsProfile
 }
-
-Export-ModuleMember -Function *-AwsProfile,*-AwsProfiles
-
