@@ -38,29 +38,36 @@ function Show-Menu {
     [string] $CurrentItem
   )
 
-  $currentIndex = $Items.IndexOf($currentIndex)
+  $currentIndex = $Items.IndexOf($CurrentItem)
   if($currentIndex -eq -1) {
     $currentIndex = 0
-  }
+  }  
 
-  $cursorTop = [Console]::CursorTop
   $selectedItem = $null
-
+  
   for($index = 0; $index -lt $Items.Length; $index++) {
     $indicator = if($index -eq $currentIndex) { "*" } else { " " }
     Write-Host "$indicator $index)" $Profiles[$index]
   }
 
+  $cursorTop = [Console]::CursorTop - $Items.Length
+
+  #
+  # Consume extra key press that happens on start
+  #
+  $Response = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyUp')
+
   while($null -eq $selectedItem) {
     $moveBy = 0
-    $Response = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-  
+    $Response = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyUp')
     switch($Response.VirtualKeyCode) {
       38 { if($currentIndex -gt 0) { $moveBy = -1 } }
       40 { if($currentIndex -lt $Items.Length - 1) { $moveBy = +1 } }
       13 { $selectedItem = $Items[$currentIndex] }
       default {
-        if($Items[$Response.Character]) {
+        [int]$index = $null
+        [int32]::TryParse($Response.Character, [ref]$index);
+        if($Items[$index]) {
           $selectedItem = $Items[$Response.Character]
         }
       }
@@ -102,7 +109,7 @@ function Write-AwsProfilesList {
   )
 
   for($index = 0; $index -lt $Profiles.Length; $index++) {
-    $indicator = If($index -eq $CurrentIndex) { "> " } else { "  " }
+    $indicator = If($index -eq $CurrentIndex) { "* " } else { "  " }
     Write-Host $indicator $Profiles[$index]
   }
 }
