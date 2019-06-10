@@ -27,10 +27,12 @@ function Set-AWSCurrentProfile {
   )
 
   if($null -eq $ProfileName) {
+    Write-Host "Clearing profile for current shell."
     Remove-Item -ErrorAction Ignore Env:AWS_PROFILE
   } else {
-    Set-Item Env:AWS_PROFILE $ProfileName
+    Write-Host "Setting profile for current shell to '$ProfileName'."
     Test-AWSProfile -ProfileName $ProfileName | Out-Null
+    Set-Item Env:AWS_PROFILE $ProfileName
   }
 }
 
