@@ -1,7 +1,7 @@
 function Get-AWSConfigFile {
   [string]$AwsConfigFile = $Env:AWS_CONFIG_FILE
 
-  if($null -eq $AwsConfigFile) {
+  if([string]::IsNullOrEmpty($AwsConfigFile)) {
     [string]$AwsHomeDefault = Join-Path ($Env:HOMEDRIVE + $Env:HOMEPATH) ".aws"
     $AwsConfigFile = Join-Path $AwsHomeDefault "config"
   }
@@ -15,7 +15,23 @@ function Get-AWSCurrentProfile {
     return "default"
   }
 
+  Test-AWSProfile -ProfileName $ProfileName.Value | Out-Null
+
   return $ProfileName.Value
+}
+
+function Set-AWSCurrentProfile {
+  Param(
+    [Parameter(Mandatory=$true, Position=1)] [AllowNull()]
+    $ProfileName
+  )
+
+  if($null -eq $ProfileName) {
+    Remove-Item -ErrorAction Ignore Env:AWS_PROFILE
+  } else {
+    Set-Item Env:AWS_PROFILE $ProfileName
+    Test-AWSProfile -ProfileName $ProfileName | Out-Null
+  }
 }
 
 function Get-AWSAvailableProfiles {
@@ -33,15 +49,18 @@ function Get-AWSAvailableProfiles {
   return @("default") + $Profiles
 }
 
-function Set-AWSCurrentProfile {
+function Test-AWSProfile {
   Param(
-    [Parameter(Mandatory=$true, Position=1)] [AllowNull()]
+    [Parameter(Mandatory=$true, Position=1)]
     $ProfileName
   )
 
-  if($null -eq $ProfileName) {
-    Remove-Item -ErrorAction Ignore Env:AWS_PROFILE
-  } else {
-    Set-Item Env:AWS_PROFILE $ProfileName
+  $AvailableProfiles = Get-AWSAvailableProfiles
+
+  if(!$AvailableProfiles.Contains($ProfileName)) {
+    Write-Warning "No configuration found for profile '$($ProfileName)'."
+    return $false
   }
+
+  return $true
 }
