@@ -1,6 +1,6 @@
 Import-Module -Force .\posh-awsprofiles.psm1
 
-Describe "Get-AWSProfile" {
+Describe "Set-AWSProfile" {
   BeforeEach {
     $Env:AWS_PROFILE = "some_profile"
   }
