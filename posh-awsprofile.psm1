@@ -43,10 +43,12 @@ function Get-AWSAvailableProfiles {
 
   $AwsConfig = Get-Content $AwsConfigFile
   $Profiles = $AwsConfig `
-    | Select-String -pattern "^\s*\[profile (.*)\s*\]$" `
-    | ForEach-Object { $_.Matches.Groups[1].Value }
+    | Select-String -Pattern "^\s*\[\s*(profile\s*(?<profile>.*)|(?<profile>default))\s*\]\s*$" `
+    | ForEach-Object { 
+        $_.Matches[0].Groups["profile"].Value
+      }
 
-  return @("default") + $Profiles
+  return $Profiles
 }
 
 function Test-AWSProfile {
