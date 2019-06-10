@@ -1,11 +1,10 @@
-Import-Module -Force .\posh-awsprofiles.psm1
+Import-Module -Force .\posh-awsprofile.psm1
 Import-Module -Force .\tests\test-helpers.psm1
 
 Describe "Get-AWSAvailableProfiles" {
   BeforeEach {
     Save-Environment
-    $ConfigFile = (Get-Item .\tests\config).FullName
-    Set-Item Env:AWS_CONFIG_FILE $ConfigFile
+    Set-Item Env:AWS_CONFIG_FILE (Get-Item .\tests\config).FullName
   }
 
   $TestCases = @(
