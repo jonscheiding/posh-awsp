@@ -6,10 +6,23 @@ if ($null -eq $AWS_CONFIG_FILE) {
 }
 
 function Get-AWSProfile {
-  $AwsProfile = $Env:AWS_PROFILE
-  if($null -eq $AwsProfile) {
+  $ProfileName = $Env:AWS_PROFILE
+  if($null -eq $ProfileName) {
     return "default"
   }
 
-  return $AwsProfile
+  return $ProfileName
+}
+
+function Set-AWSProfile {
+  Param(
+    [Parameter(Mandatory=$true, Position=1)] [AllowNull()]
+    $ProfileName
+  )
+
+  if($null -eq $ProfileName -and $null -ne $Env:AWS_PROFILE) {
+    Remove-Item Env:\AWS_PROFILE
+  } else {
+    $Env:AWS_PROFILE = $ProfileName
+  }
 }
