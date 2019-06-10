@@ -10,28 +10,30 @@ function Get-AWSConfigFile {
 }
 
 function Get-AWSCurrentProfile {
-  $ProfileName = (Get-Item -ErrorAction Ignore Env:AWS_PROFILE)
-  if($null -eq $ProfileName) {
-    return "default"
+  $ProfileItem = (Get-Item -ErrorAction Ignore Env:AWS_PROFILE)
+  if($null -eq $ProfileItem) {
+    $ProfileName = "default"
+  } else {
+    $ProfileName = $ProfileItem.Value
   }
 
-  Test-AWSProfile -ProfileName $ProfileName.Value | Out-Null
+  Test-AWSProfile -ProfileName $ProfileName | Out-Null
 
-  return $ProfileName.Value
+  return $ProfileName
 }
 
 function Set-AWSCurrentProfile {
   Param(
-    [Parameter(Mandatory=$true, Position=1)] [AllowNull()]
-    $ProfileName
+    [Parameter(Mandatory=$true, Position=1)] [AllowEmptyString()]
+    [string]$ProfileName
   )
 
-  if($null -eq $ProfileName) {
+  if([string]::IsNullOrEmpty($ProfileName)) {
     Write-Host "Clearing profile for current shell."
     Remove-Item -ErrorAction Ignore Env:AWS_PROFILE
   } else {
-    Write-Host "Setting profile for current shell to '$ProfileName'."
     Test-AWSProfile -ProfileName $ProfileName | Out-Null
+    Write-Host "Setting profile for current shell to '$ProfileName'."
     Set-Item Env:AWS_PROFILE $ProfileName
   }
 }
@@ -40,7 +42,8 @@ function Get-AWSAvailableProfiles {
   $AwsConfigFile = Get-AWSConfigFile
 
   if(!(Test-Path $AwsConfigFile -PathType Leaf)) {
-    Throw "AWS CLI config file $AwsConfigFile doesn't exist.  Run 'aws configure' to create it."
+    Write-Warning "AWS CLI config file $AwsConfigFile doesn't exist.  Run 'aws configure' to create it."
+    return @()
   }
 
   $AwsConfig = Get-Content $AwsConfigFile
@@ -61,7 +64,7 @@ function Test-AWSProfile {
 
   $AvailableProfiles = Get-AWSAvailableProfiles
 
-  if(!$AvailableProfiles.Contains($ProfileName)) {
+  if($AvailableProfiles.Length -eq 0 -or !$AvailableProfiles.Contains($ProfileName)) {
     Write-Warning "No configuration found for profile '$($ProfileName)'."
     return $false
   }
@@ -72,6 +75,11 @@ function Test-AWSProfile {
 function Switch-AWSProfile {
   $AvailableProfiles = Get-AWSAvailableProfiles
   $CurrentProfile = Get-AWSCurrentProfile
+
+  If($AvailableProfiles.Length -eq 0) {
+    Write-Error "There are no profiles configured."
+    return
+  }
 
   Write-Host "Use [ and ] to move up and down the list of profiles."
   Write-Host "Use \ to select a profile, - to clear your profile, or = to cancel."
