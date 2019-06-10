@@ -21,7 +21,18 @@ function Get-AWSConfigFile {
     # If the environment variable is not configured, calculate
     # the default location as documented in the AWS CLI docs.
     #
-    [string]$AwsHomeDefault = Join-Path ($Env:HOMEDRIVE + $Env:HOMEPATH) ".aws"
+    $Home = $Env:HOME
+    
+    if($null -eq $Home) {
+      $Home = $Env:HOMEDRIVE + $Env:HOMEPATH
+    }
+
+    if($null -eq $Home) {
+      Write-Warning "Could not determine user's home directory."
+      return $null
+    }
+
+    [string]$AwsHomeDefault = Join-Path $Home ".aws"
     $AwsConfigFile = Join-Path $AwsHomeDefault "config"
   }
 
