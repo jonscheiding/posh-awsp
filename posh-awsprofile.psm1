@@ -68,3 +68,38 @@ function Test-AWSProfile {
 
   return $true
 }
+
+function Switch-AWSProfile {
+  $AvailableProfiles = Get-AWSAvailableProfiles
+  $CurrentProfile = Get-AWSCurrentProfile
+
+  $SelectedProfile = Read-MenuSelection -Items $AvailableProfiles -CurrentItem $CurrentProfile
+
+  Set-AWSCurrentProfile -ProfileName $SelectedProfile
+}
+
+function Read-MenuSelection {
+  Param(
+    [Parameter(Mandatory = $true)] $Items,
+    [Parameter(Mandatory = $true)] $CurrentItem
+  )
+
+  $SelectedItem = $null
+
+  while($null -eq $SelectedItem) {
+
+    for($i = 0; $i -lt $Items.Length; $i++) {
+      $Indicator = if ($CurrentItem -eq $Items[$i]) { "*" } else { " " }
+      $Index = if ($i -lt 10) { $i } else { " " }
+      Write-Host "$Indicator $Index $($Items[$i])"
+    }
+
+    $Key = [Console]::ReadKey($true)
+    $KeyedIndex = -1
+    if([int]::TryParse($Key.KeyChar, [ref]$KeyedIndex) -and $KeyedIndex -lt $Items.Length) {
+      $SelectedItem = $Items[$KeyedIndex]
+    }
+  }
+
+  return $SelectedItem
+}
