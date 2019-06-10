@@ -1,21 +1,22 @@
-function Get-AWSProfile {
-  $ProfileName = $Env:AWS_PROFILE
+function Get-AWSCurrentProfile {
+  $ProfileName = (Get-Item -ErrorAction Ignore Env:AWS_PROFILE)
   if($null -eq $ProfileName) {
     return "default"
   }
 
-  return $ProfileName
+  return $ProfileName.Value
 }
 
-function Set-AWSProfile {
+
+function Set-AWSCurrentProfile {
   Param(
     [Parameter(Mandatory=$true, Position=1)] [AllowNull()]
     $ProfileName
   )
 
-  if($null -eq $ProfileName -and $null -ne $Env:AWS_PROFILE) {
-    Remove-Item Env:\AWS_PROFILE
+  if($null -eq $ProfileName) {
+    Remove-Item -ErrorAction Ignore Env:AWS_PROFILE
   } else {
-    $Env:AWS_PROFILE = $ProfileName
+    Set-Item Env:AWS_PROFILE $ProfileName
   }
 }

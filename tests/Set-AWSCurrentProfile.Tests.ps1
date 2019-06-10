@@ -1,23 +1,23 @@
 Import-Module -Force .\posh-awsprofiles.psm1
+Import-Module -Force .\tests\test-helpers.psm1
 
-Describe "Set-AWSProfile" {
+Describe "Set-AWSCurrentProfile" {
   BeforeEach {
-    $Env:AWS_PROFILE = "some_profile"
+    Save-Environment
+    Set-Item Env:AWS_PROFILE "some_profile"
   }
 
   It "Sets the specified profile when one is provided" {
-    Set-AWSProfile -ProfileName "some_other_profile"
+    Set-AWSCurrentProfile -ProfileName "some_other_profile"
     $Env:AWS_PROFILE | Should Be "some_other_profile"
   }
 
   It "Clears the profile when null is provided" {
-    Set-AWSProfile -ProfileName $null
+    Set-AWSCurrentProfile -ProfileName $null
     $Env:AWS_PROFILE | Should Be $null
   }
 
   AfterEach {
-    if($null -ne $Env:AWS_PROFILE) {
-      Remove-Item Env:\AWS_PROFILE
-    }
+    Restore-Environment
   }
 }
