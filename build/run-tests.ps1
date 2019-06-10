@@ -1,4 +1,3 @@
-Install-Module -Force Pester
 Import-Module Pester
 
 $Result = Invoke-Pester -PassThru

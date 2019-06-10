@@ -11,5 +11,14 @@ addons:
     packages:
       - powershell
 
+before_script:
+  - pwsh -Command 'Install-Module -Force -Scope CurrentUser Pester'
+
 script:
-  - pwsh -f ./travis.ps1
+  - pwsh -File ./build/run-tests.ps1
+
+deploy:
+  provider: script
+  on:
+    tags: true
+  script: pwsh ./build/create-manifest.ps1 -Version $TRAVIS_TAG
