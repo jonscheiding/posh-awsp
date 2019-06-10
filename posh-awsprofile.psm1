@@ -73,7 +73,14 @@ function Switch-AWSProfile {
   $AvailableProfiles = Get-AWSAvailableProfiles
   $CurrentProfile = Get-AWSCurrentProfile
 
+  Write-Host "Use [ and ] to move up and down the list of profiles."
+  Write-Host "Use \ to select a profile, - to clear your profile, or = to cancel."
+
   $SelectedProfile = Read-MenuSelection -Items $AvailableProfiles -CurrentItem $CurrentProfile
+
+  if($SelectedProfile -eq 0) {
+    return
+  }
 
   Set-AWSCurrentProfile -ProfileName $SelectedProfile
 }
@@ -85,19 +92,49 @@ function Read-MenuSelection {
   )
 
   $SelectedItem = $null
+  $CurrentIndex = $Items.IndexOf($CurrentItem)
+  if($CurrentIndex -lt 0) { $CurrentIndex = 0 }
+
+  for($i = 0; $i -lt $Items.Length; $i++) {
+    $Indicator = if ($CurrentIndex -eq $i) { "*" } else { " " }
+    $Index = if ($i -lt 10) { $i } else { " " }
+    Write-Host "$Indicator $Index $($Items[$i])"
+  }
+
+  $CursorTop = [Console]::CursorTop - $Items.Length
 
   while($null -eq $SelectedItem) {
-
-    for($i = 0; $i -lt $Items.Length; $i++) {
-      $Indicator = if ($CurrentItem -eq $Items[$i]) { "*" } else { " " }
-      $Index = if ($i -lt 10) { $i } else { " " }
-      Write-Host "$Indicator $Index $($Items[$i])"
+    $MoveBy = 0
+    $Key = [Console]::ReadKey($true)
+    
+    switch($Key.KeyChar) {
+      {[char]::IsNumber($_)} {
+        $Index = [int]::Parse($_)
+        if ($Index -lt $Items.Length) {
+          $SelectedItem = $Items[$Index]
+        }
+      }
+      "[" {
+        if ($CurrentIndex -gt 0) { $MoveBy = -1 }
+      }
+      "]" {
+        if ($CurrentIndex -lt $Items.Length - 1) { $MoveBy = 1 }
+      }
+      "\" {
+        $SelectedItem = $Items[$CurrentIndex]
+      }
+      "-" { return $null }
+      "=" { return 0 }
+      default { Write-Host $_ }
     }
 
-    $Key = [Console]::ReadKey($true)
-    $KeyedIndex = -1
-    if([int]::TryParse($Key.KeyChar, [ref]$KeyedIndex) -and $KeyedIndex -lt $Items.Length) {
-      $SelectedItem = $Items[$KeyedIndex]
+    if($MoveBy -ne 0) {
+      [Console]::SetCursorPosition(0, $CursorTop + $CurrentIndex)
+      Write-Host -NoNewline " "
+      $CurrentIndex += $MoveBy
+      [Console]::SetCursorPosition(0, $CursorTop + $CurrentIndex)
+      Write-Host -NoNewline "*"
+      [Console]::SetCursorPosition(0, $CursorTop + $Items.Length)
     }
   }
 
