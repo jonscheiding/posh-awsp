@@ -1,10 +1,44 @@
 # posh-awsp
 
-![Build Status](https://img.shields.io/travis/jonscheiding/posh-awsp.svg)
+[![Build Status](https://img.shields.io/travis/jonscheiding/posh-awsp.svg)](https://travis-ci.org/jonscheiding/posh-awsp)
+[![PowerShell Gallery](https://img.shields.io/powershellgallery/v/posh-awsp.svg)](https://www.powershellgallery.com/packages/posh-awsp)
+
+## Table of contents
+
+- [Overview](#Overview)
+- [Installation](#Installation)
+- [Quick Start](#Quick-Start)
+- [Usage](#Usage)
+  - [Get-AWSCurrentProfile](#Get-AWSCurrentProfile)
+  - [Set-AWSCurrentProfile](#Set-AWSCurrentProfile)
+  - [Get-AWSAvailableProfiles](#Get-AWSAvailableProfiles)
+  - [Switch-AWSProfile](#Switch-AWSProfile)
 
 ## Overview
 
 posh-awsp is a PowerShell module that makes it easier to manage multiple AWS CLI profiles.  It interacts with your AWS config file (located by default at `~/.aws/config`) and the `AWS_PROFILE` environment variable, which is used by the AWS CLI and PowerShell cmdlets to control which profile to use.
+
+## Installation
+
+posh-awsp is available in the [PowerShell Gallery](https://www.powershellgallery.com/packages/posh-awsp), and can be installed with the following command:
+
+```powershell
+Install-Module posh-awsp
+```
+
+## Quick Start
+
+To select a profile:
+
+```powershell
+awsp some_profile
+```
+
+To see a list of available profiles and choose one:
+
+```powershell
+awsp
+```
 
 ## Usage
 
@@ -34,6 +68,7 @@ Changes your currently selected profile to the one you provide via the `-Profile
 ```cmd
 PS> Set-AWSCurrentProfile -ProfileName me
 Setting profile for current shell to 'me'.
+Updating user environment variable to persist profile setting.
 ```
 
 ```cmd
@@ -47,6 +82,7 @@ This command will display a warning if the provided profile does not exist, but 
 PS> Set-AWSCurrentProfile -ProfileName nobody
 WARNING: No configuration found for profile 'nobody'.
 Setting profile for current shell to 'nobody'.
+Updating user environment variable to persist profile setting.
 ```
 
 ```cmd
@@ -59,12 +95,21 @@ You can also clear the current profile selection.
 ```cmd
 PS> Set-AWSCurrentProfile -Clear
 Clearing profile for current shell.
+Updating user environment variable to persist profile setting.
 ```
 
 ```cmd
 PS> Get-AWSCurrentProfile
 No profile selected; 'default' will be used.
 default
+```
+
+If you don't want to update your user-level environment variable, use the `-NoPersist` flag.
+This way, your setting will only take effect for the current PowerShell session.
+
+```cmd
+PS> Set-AWSCurrentProfile me -NoPersist
+Clearing profile for current shell.
 ```
 
 ### `Get-AWSAvailableProfiles`
@@ -109,3 +154,15 @@ At line:1 char:1
     + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
     + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,Switch-AWSProfile
 ```
+
+You can pass a profile name, in which case this command becomes essentially an alias for `Set-AWSCurrentProfile`.
+
+```cmd
+PS> Switch-AWSProfile -ProfileName me
+Setting profile for current shell to 'me'.
+Updating user environment variable to persist profile setting.
+```
+
+You can also pass the `-NoPersist` flag, similarly to `Set-AWSCurrentProfile`.
+
+This command is aliased as `awsp` for quicker access.
