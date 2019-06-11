@@ -57,6 +57,7 @@ function Get-AWSCurrentProfile {
 
   $ProfileItem = (Get-Item -ErrorAction Ignore Env:AWS_PROFILE)
   if($null -eq $ProfileItem) {
+    Write-Host "No profile selected; 'default' will be used."
     $ProfileName = "default"
   } else {
     $ProfileName = $ProfileItem.Value
@@ -76,16 +77,25 @@ function Set-AWSCurrentProfile {
       This manipulates the value of the AWS_PROFILE environment variable. If the provided
       value does not exist as a configured AWS CLI profile, a warning will be displayed.
 
+    .PARAMETER ProfileName
+      Set the profile to this value.
+
+    .PARAMETER Clear
+      Clear the selected profile.
+
     .LINK
       https://www.github.com/jonscheiding/posh-awsprofile
   #>
 
   Param(
-    [Parameter(Mandatory=$true, Position=1)] [AllowEmptyString()]
-    [string]$ProfileName
+    [Parameter(Mandatory=$true, Position=1, ParameterSetName='Set-Profile')]
+    [string]$ProfileName,
+    # Clear the profile selection.
+    [Parameter(Mandatory=$true, Position=1, ParameterSetName='Clear-Profile')]
+    [switch]$Clear
   )
 
-  if([string]::IsNullOrEmpty($ProfileName)) {
+  if($Clear) {
     Write-Host "Clearing profile for current shell."
     Remove-Item -ErrorAction Ignore Env:AWS_PROFILE
   } else {

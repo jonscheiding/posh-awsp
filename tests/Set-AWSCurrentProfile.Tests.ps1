@@ -12,8 +12,8 @@ Describe "Set-AWSCurrentProfile" {
     $Env:AWS_PROFILE | Should Be "some_other_profile"
   }
 
-  It "Clears the profile when null is provided" {
-    Set-AWSCurrentProfile -ProfileName $null
+  It "Clears the profile when the -Clear parameter is provided" {
+    Set-AWSCurrentProfile -Clear
     $Env:AWS_PROFILE | Should Be $null
   }
 
