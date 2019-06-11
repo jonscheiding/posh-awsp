@@ -83,6 +83,10 @@ function Set-AWSCurrentProfile {
     .PARAMETER Clear
       Clear the selected profile.
 
+    .PARAMETER NoPersist
+      Do not save the updated profile into the user's environment variables; only
+      apply it to the current Powershell session.
+
     .LINK
       https://www.github.com/jonscheiding/posh-awsprofile
   #>
@@ -107,6 +111,10 @@ function Set-AWSCurrentProfile {
       Write-Host "Setting profile for current shell to '$ProfileName'."
       Set-Item Env:AWS_PROFILE $ProfileName
     }
+  }
+
+  if($NoPersist) {
+    return
   }
 
   Write-Host "Updating user environment variable to persist profile setting."
@@ -190,9 +198,17 @@ function Switch-AWSProfile {
       Additionally, you can press any number key to select the profile
       indicated by that key.
 
+    .PARAMETER NoPersist
+      Do not save the updated profile into the user's environment variables; only
+      apply it to the current Powershell session.
+
     .LINK
       https://www.github.com/jonscheiding/posh-awsprofile
   #>
+  Param(
+    [Parameter()]
+    [switch] $NoPersist
+  )
 
   $AvailableProfiles = Get-AWSAvailableProfiles
   $CurrentProfile = Get-AWSCurrentProfile
@@ -211,7 +227,7 @@ function Switch-AWSProfile {
     return
   }
 
-  Set-AWSCurrentProfile -ProfileName $SelectedProfile
+  Set-AWSCurrentProfile -ProfileName $SelectedProfile -NoPersist:$NoPersist
 }
 
 function Read-MenuSelection {
