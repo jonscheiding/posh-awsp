@@ -1,4 +1,4 @@
-Import-Module -Force .\posh-awsprofile.psm1
+Import-Module -Force .\posh-awsp.psm1
 Import-Module -Force .\tests\test-helpers.psm1
 
 Describe "Get-AWSCurrentProfile" {

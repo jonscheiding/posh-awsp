@@ -3,9 +3,9 @@ Param(
 )
 
 $ModuleSettings = @{
-  Path = ".\posh-awsprofile.psd1"
+  Path = ".\posh-awsp.psd1"
   ModuleVersion = $Version
-  RootModule = ".\posh-awsprofile.psm1"
+  RootModule = ".\posh-awsp.psm1"
   GUID = "a66e9bab-da01-46e2-884d-55797027a362"
   Author = "Jon Scheiding"
   Description = "PowerShell cmdlets for managing your AWS CLI profile."
