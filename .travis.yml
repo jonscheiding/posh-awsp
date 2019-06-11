@@ -1,24 +1,28 @@
 language: generic
-
 os: linux
 dist: xenial
 
 addons:
   apt:
     sources:
-      - sourceline: "deb [arch=amd64] https://packages.microsoft.com/ubuntu/16.04/prod xenial main"
-        key_url: "https://packages.microsoft.com/keys/microsoft.asc"
+    - sourceline: deb [arch=amd64] https://packages.microsoft.com/ubuntu/16.04/prod
+        xenial main
+      key_url: https://packages.microsoft.com/keys/microsoft.asc
     packages:
-      - powershell
+    - powershell
 
 before_script:
-  - pwsh -Command 'Install-Module -Force -Scope CurrentUser Pester'
+- pwsh -Command 'Install-Module -Force -Scope CurrentUser Pester'
 
 script:
-  - pwsh -File ./build/run-tests.ps1
+- pwsh -File ./build/run-tests.ps1
 
 deploy:
   provider: script
   on:
     tags: true
-  script: pwsh ./build/create-manifest.ps1 -Version $TRAVIS_TAG
+  script: pwsh ./build/publish-module.ps1 -ModuleVersion $TRAVIS_TAG -NuGetApiKey $NUGET_API_KEY
+
+env:
+  global:
+    secure: lmPNl+CBbZ+IEnoyGACtwzMZzjagWtsc90DVkzdpE2qivfpU2BANr/7JUmuvK5NJLyflg2o3vnGTCNzZCwdKmmzlRJ4B8E8nZstsTaaVW2JJU+MyJMxBtQFOE1IakuT3ydaHqz/D2dD9bsvMpUzC1gaX8H85cGW316TTRofEJcQW6twmImVNpXGzb9RHzXM0TwmN6owB5twy3sYRUeMmK5CTqPNuEdZiiZQ2tYuIReD/atRy0GKhCy7LFKwbp+mM/dgjU1gRrwjNkuxQ/16z6RmWhIV7c/s9wXsUsS9jzV2/+tvY09cg+RJfOFBqzvYl63GVi7vQ0GBK0Rh62RxaUEAqvZikzuZrxPo3Izr4+I/VxclL2YCirz9EItUKDJh/u8zz3vjf4y5j2YdyLMJHnp9NAap2KPGYxN86aTw5wMBnDe2Rub0sHKEqXtq5UpnCbbkuKoi3M2PNcOj0h+iqEfZW8PlG+GlGpJcc2HI1tDRcif4h1emgxF7R5k4sb13OfSIgHW+vNJfvwFL6SbslgfPv9gZHisQwCBcgtElQpZvpIW+/SjO5RxxQfs/Hm+/9+MzXdmeGCwpE5m0wGf+7LeNtEtAmDmp0Id/KrfvcvuKfzW1nG2cjGNeWd5z6SBKPDJnLmyeauGMgmHkNzoZqJ4s208L3t3xLWY7k3qbLamE=
