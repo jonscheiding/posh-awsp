@@ -90,19 +90,29 @@ function Set-AWSCurrentProfile {
   Param(
     [Parameter(Mandatory=$true, Position=1, ParameterSetName='Set-Profile')]
     [string]$ProfileName,
-    # Clear the profile selection.
-    [Parameter(Mandatory=$true, Position=1, ParameterSetName='Clear-Profile')]
-    [switch]$Clear
+    [Parameter(Mandatory=$true, ParameterSetName='Clear-Profile')]
+    [switch]$Clear,
+    [Parameter()]
+    [switch]$NoPersist
   )
 
-  if($Clear) {
-    Write-Host "Clearing profile for current shell."
-    Remove-Item -ErrorAction Ignore Env:AWS_PROFILE
-  } else {
-    Test-AWSProfile -ProfileName $ProfileName | Out-Null
-    Write-Host "Setting profile for current shell to '$ProfileName'."
-    Set-Item Env:AWS_PROFILE $ProfileName
+  switch($PSCmdlet.ParameterSetName) {
+    "Clear-Profile" {
+      $ProfileName = $null
+      Write-Host "Clearing profile for current shell."
+      Remove-Item -ErrorAction Ignore Env:AWS_PROFILE
+    }
+    "Set-Profile" {
+      Test-AWSProfile -ProfileName $ProfileName | Out-Null
+      Write-Host "Setting profile for current shell to '$ProfileName'."
+      Set-Item Env:AWS_PROFILE $ProfileName
+    }
   }
+
+  Write-Host "Updating user environment variable to persist profile setting."
+  [System.Environment]::SetEnvironmentVariable(
+    "AWS_PROFILE", $ProfileName, 
+    [System.EnvironmentVariableTarget]::User)
 }
 
 function Get-AWSAvailableProfiles {
