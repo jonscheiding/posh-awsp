@@ -92,7 +92,7 @@ function Set-AWSCurrentProfile {
   #>
 
   Param(
-    [Parameter(Mandatory=$true, Position=1, ParameterSetName='Set-Profile')]
+    [Parameter(Mandatory=$true, Position=0, ParameterSetName='Set-Profile')]
     [string]$ProfileName,
     [Parameter(Mandatory=$true, ParameterSetName='Clear-Profile')]
     [switch]$Clear,
@@ -198,6 +198,9 @@ function Switch-AWSProfile {
       Additionally, you can press any number key to select the profile
       indicated by that key.
 
+    .PARAMETER ProfileName
+      When provided, skips the menu and directly sets the profile name.
+
     .PARAMETER NoPersist
       Do not save the updated profile into the user's environment variables; only
       apply it to the current Powershell session.
@@ -206,28 +209,32 @@ function Switch-AWSProfile {
       https://www.github.com/jonscheiding/posh-awsprofile
   #>
   Param(
+    [Parameter(Position=0)]
+    [string] $ProfileName,
     [Parameter()]
     [switch] $NoPersist
   )
 
-  $AvailableProfiles = Get-AWSAvailableProfiles
-  $CurrentProfile = Get-AWSCurrentProfile
+  if([string]::IsNullOrEmpty($ProfileName)) {
+    $AvailableProfiles = Get-AWSAvailableProfiles
+    $CurrentProfile = Get-AWSCurrentProfile
+  
+    if($AvailableProfiles.Length -eq 0) {
+      Write-Error "There are no profiles configured."
+      return
+    }
 
-  If($AvailableProfiles.Length -eq 0) {
-    Write-Error "There are no profiles configured."
+    Write-Host "Use [ and ] to move up and down the list of profiles."
+    Write-Host "Use \ to select a profile, - to clear your profile, or = to cancel."
+
+    $ProfileName = Read-MenuSelection -Items $AvailableProfiles -CurrentItem $CurrentProfile
+  }
+
+  if($ProfileName -eq 0) {
     return
   }
 
-  Write-Host "Use [ and ] to move up and down the list of profiles."
-  Write-Host "Use \ to select a profile, - to clear your profile, or = to cancel."
-
-  $SelectedProfile = Read-MenuSelection -Items $AvailableProfiles -CurrentItem $CurrentProfile
-
-  if($SelectedProfile -eq 0) {
-    return
-  }
-
-  Set-AWSCurrentProfile -ProfileName $SelectedProfile -NoPersist:$NoPersist
+  Set-AWSCurrentProfile -ProfileName $ProfileName -NoPersist:$NoPersist
 }
 
 function Read-MenuSelection {
@@ -298,3 +305,5 @@ function Read-MenuSelection {
 
   return $SelectedItem
 }
+
+New-Alias -Name awsp -Value Switch-AWSProfile
