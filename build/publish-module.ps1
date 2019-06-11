@@ -18,18 +18,13 @@ $CopySettings = @{
   )
 }
 
-$ModuleSettings = @{
-  Path = $ModuleManifestPath
-  ModuleVersion = $ModuleVersion
-}
-
 $PublishSettings = @{
   Path = $PublishPath
   NuGetApiKey = $NuGetApiKey
   WhatIf = $WhatIf
 }
 
-Update-ModuleManifest -PassThru $ModuleSettings
+Update-ModuleManifest -PassThru -Path $ModuleManifestPath -ModuleVersion $ModuleVersion
 
 if (Test-Path -Path $PublishPath) { Remove-Item -Force -Recurse $PublishPath | Out-Null }
 New-Item -ItemType directory -Path $PublishPath | Out-Null
