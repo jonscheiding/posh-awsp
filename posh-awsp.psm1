@@ -224,22 +224,22 @@ function Switch-AWSProfile {
       return
     }
 
-    Write-Host "Use [ and ] to move up and down the list of profiles."
-    Write-Host "Use \ to select a profile, - to clear your profile, or = to cancel."
+    Write-Host `
+      "Press Delete to clear your profile setting.`nPress Escape to cancel."
 
     $ProfileName = Read-MenuSelection -Items $AvailableProfiles -CurrentItem $CurrentProfile
   }
 
   if($ProfileName -eq 0) {
-    return
-  }
-
-  if($null -eq $ProfileName) {
+    Write-Host "Leaving profile as '$CurrentProfile'."
+  } elseif($null -eq $ProfileName) {
     Set-AWSCurrentProfile -Clear -NoPersist:$NoPersist
-    return
+  } else {
+    Set-AWSCurrentProfile -ProfileName $ProfileName -NoPersist:$NoPersist
   }
 
-  Set-AWSCurrentProfile -ProfileName $ProfileName -NoPersist:$NoPersist
+  Write-Host ""
+  return
 }
 
 function Read-MenuSelection {
@@ -281,18 +281,19 @@ function Read-MenuSelection {
     $MoveBy = 0
     $Key = [Console]::ReadKey($true)
     
-    switch($Key.KeyChar) {
-      {[char]::IsNumber($_)} {
-        $Index = [int]::Parse($_)
-        if ($Index -lt $Items.Length) {
-          $SelectedItem = $Items[$Index]
-        }
+    switch($Key.Key) {
+      "UpArrow"   { if ($CurrentIndex -gt 0) { $MoveBy = -1 } }
+      "DownArrow" { if ($CurrentIndex -lt $Items.Length - 1) { $MoveBy = 1 } }
+      "Enter"     { $SelectedItem = $Items[$CurrentIndex] }
+      "Escape"    { return 0 }
+      "Delete"    { return $null }
+    }
+
+    if([char]::IsNumber($Key.KeyChar)) {
+      $Index = [int]::Parse($Key.KeyChar)
+      if ($Index -lt $Items.Length) {
+        $SelectedItem = $Items[$Index]
       }
-      "[" { if ($CurrentIndex -gt 0) { $MoveBy = -1 } }
-      "]" { if ($CurrentIndex -lt $Items.Length - 1) { $MoveBy = 1 } }
-      "\" { $SelectedItem = $Items[$CurrentIndex] }
-      "-" { return $null }
-      "=" { return 0 }
     }
 
     if($MoveBy -ne 0) {

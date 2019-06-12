@@ -131,12 +131,12 @@ WARNING: AWS CLI config file C:\Users\me\.aws\config doesn't exist.  Run 'aws co
 
 ### `Switch-AWSProfile`
 
-Displays an interactive menu that can be used to select a different profile from the available ones.  The current profile is preselected, unless it doesn't exist.
+Displays an interactive menu that can be used to select a different profile from the available ones. You can use the arrow keys to navigate the menu to select a profile. The current profile is preselected, unless it doesn't exist.
 
 ```cmd
 PS> Switch-AWSProfile
-Use [ and ] to move up and down the list of profiles.
-Use \ to select a profile, - to clear your profile, or = to cancel.
+Press Delete to clear your profile setting.
+Press Escape to cancel.
   0 default
 * 1 me
 Setting profile for current shell to 'me'.
