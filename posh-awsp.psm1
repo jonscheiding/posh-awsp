@@ -83,9 +83,9 @@ function Set-AWSCurrentProfile {
     .PARAMETER Clear
       Clear the selected profile.
 
-    .PARAMETER NoPersist
-      Do not save the updated profile into the user's environment variables; only
-      apply it to the current Powershell session.
+    .PARAMETER Persist
+      Save the updated profile into the user's environment variables so that it persists
+      across PowerShell restarts.
 
     .LINK
       https://www.github.com/jonscheiding/posh-awsprofile
@@ -97,27 +97,28 @@ function Set-AWSCurrentProfile {
     [Parameter(Mandatory=$true, ParameterSetName='Clear-Profile')]
     [switch]$Clear,
     [Parameter()]
-    [switch]$NoPersist
+    [switch]$Persist
   )
 
   switch($PSCmdlet.ParameterSetName) {
     "Clear-Profile" {
       $ProfileName = $null
-      Write-Host "Clearing profile for current shell."
+      Write-Host "Clearing profile setting for current session."
       Remove-Item -ErrorAction Ignore Env:AWS_PROFILE
     }
     "Set-Profile" {
       Test-AWSProfile -ProfileName $ProfileName | Out-Null
-      Write-Host "Setting profile for current shell to '$ProfileName'."
+      Write-Host "Setting profile for current session to '$ProfileName'."
       Set-Item Env:AWS_PROFILE $ProfileName
     }
   }
 
-  if($NoPersist) {
+  if(!$Persist) {
+    Write-Host "To change the profile setting for future sessions, run this command with the -Persist argument."
     return
   }
 
-  Write-Host "Updating user environment variable to persist profile setting."
+  Write-Host "Updating user environment variable to change profile setting for future sessions."
   [System.Environment]::SetEnvironmentVariable(
     "AWS_PROFILE", $ProfileName, 
     [System.EnvironmentVariableTarget]::User)
@@ -201,9 +202,9 @@ function Switch-AWSProfile {
     .PARAMETER ProfileName
       When provided, skips the menu and directly sets the profile name.
 
-    .PARAMETER NoPersist
-      Do not save the updated profile into the user's environment variables; only
-      apply it to the current Powershell session.
+    .PARAMETER Persist
+      Save the updated profile into the user's environment variables so that it persists
+      across PowerShell restarts.
 
     .LINK
       https://www.github.com/jonscheiding/posh-awsprofile
@@ -212,7 +213,7 @@ function Switch-AWSProfile {
     [Parameter(Position=0)]
     [string] $ProfileName,
     [Parameter()]
-    [switch] $NoPersist
+    [switch] $Persist
   )
 
   if([string]::IsNullOrEmpty($ProfileName)) {
@@ -235,7 +236,7 @@ function Switch-AWSProfile {
   } elseif([string]::IsNullOrEmpty($ProfileName)) {
     Set-AWSCurrentProfile -Clear -NoPersist:$NoPersist
   } else {
-    Set-AWSCurrentProfile -ProfileName $ProfileName -NoPersist:$NoPersist
+    Set-AWSCurrentProfile -ProfileName $ProfileName -Persist:$Persist
   }
 
   Write-Host ""

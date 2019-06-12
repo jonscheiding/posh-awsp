@@ -67,8 +67,8 @@ Changes your currently selected profile to the one you provide via the `-Profile
 
 ```cmd
 PS> Set-AWSCurrentProfile -ProfileName me
-Setting profile for current shell to 'me'.
-Updating user environment variable to persist profile setting.
+Setting profile for current session to 'me'.
+To change the profile setting for future sessions, run this command with the -Persist argument.
 ```
 
 ```cmd
@@ -81,8 +81,8 @@ This command will display a warning if the provided profile does not exist, but 
 ```cmd
 PS> Set-AWSCurrentProfile -ProfileName nobody
 WARNING: No configuration found for profile 'nobody'.
-Setting profile for current shell to 'nobody'.
-Updating user environment variable to persist profile setting.
+Setting profile for current session to 'nobody'.
+To change the profile setting for future sessions, run this command with the -Persist argument.
 ```
 
 ```cmd
@@ -94,8 +94,8 @@ You can also clear the current profile selection.
 
 ```cmd
 PS> Set-AWSCurrentProfile -Clear
-Clearing profile for current shell.
-Updating user environment variable to persist profile setting.
+Clearing profile setting for current session.
+To change the profile setting for future sessions, run this command with the -Persist argument.
 ```
 
 ```cmd
@@ -104,12 +104,13 @@ No profile selected; 'default' will be used.
 default
 ```
 
-If you don't want to update your user-level environment variable, use the `-NoPersist` flag.
-This way, your setting will only take effect for the current PowerShell session.
+If you want to update your user-level environment variable, use the `-Persist` flag.
+This way, your setting will take effect for all future PowerShell sessions.
 
 ```cmd
-PS> Set-AWSCurrentProfile me -NoPersist
-Clearing profile for current shell.
+PS> Set-AWSCurrentProfile me -Persist
+Clearing profile for current session.
+Updating user environment variable to change profile setting for future sessions.
 ```
 
 ### `Get-AWSAvailableProfiles`
@@ -160,9 +161,9 @@ You can pass a profile name, in which case this command becomes essentially an a
 ```cmd
 PS> Switch-AWSProfile -ProfileName me
 Setting profile for current shell to 'me'.
-Updating user environment variable to persist profile setting.
+To update the profile setting for future sessions, run this command with the -Persist argument.
 ```
 
-You can also pass the `-NoPersist` flag, similarly to `Set-AWSCurrentProfile`.
+You can also pass the `-Persist` flag, similarly to `Set-AWSCurrentProfile`.
 
 This command is aliased as `awsp` for quicker access.
