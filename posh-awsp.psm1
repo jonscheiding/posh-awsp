@@ -234,6 +234,11 @@ function Switch-AWSProfile {
     return
   }
 
+  if($null -eq $ProfileName) {
+    Set-AWSCurrentProfile -Clear -NoPersist:$NoPersist
+    return
+  }
+
   Set-AWSCurrentProfile -ProfileName $ProfileName -NoPersist:$NoPersist
 }
 
