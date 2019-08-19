@@ -132,7 +132,7 @@ function Set-AWSCurrentProfile {
     return
   }
 
-  if(!$IsWindows) {
+  if(!(Test-IsWindows)) {
     Write-Warning "The -Persist argument is not supported on non-Windows platforms."
     return
   }
@@ -330,6 +330,26 @@ function Read-MenuSelection {
   }
 
   return $SelectedItem
+}
+
+function Test-IsWindows {
+  <#
+    .SYNOPSIS
+      Utility function that checks if we are currently running on Windows.
+
+    .LINK
+      https://www.github.com/jonscheiding/posh-awsprofile
+  #>
+ 
+  if(!(Get-Variable -Name IsWindows -ErrorAction SilentlyContinue)) {
+    # 
+    # No $IsWindows variable means we're on PowerShell Core 5.1 or
+    # PowerShell Desktop, both of which are Windows-only.
+    #
+    return $true
+  }
+
+  return $IsWindows
 }
 
 New-Alias -Name awsp -Value Switch-AWSProfile
