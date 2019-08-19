@@ -51,13 +51,22 @@ function Get-AWSCurrentProfile {
       If the variable is set to a value that does not exist as a configured AWS CLI profile,
       a warning will be displayed.
 
+    .PARAMETER Quiet
+      Suppress informational output.
+
     .LINK
       https://www.github.com/jonscheiding/posh-awsprofile
   #>
 
+  Param(
+    [Parameter()]
+    [switch] $Quiet
+  )
+
   $ProfileItem = (Get-Item -ErrorAction Ignore Env:AWS_PROFILE)
   if($null -eq $ProfileItem) {
-    Write-Host "No profile selected; 'default' will be used."
+    if(!$Quiet) { Write-Host "No profile selected; 'default' will be used." }
+
     $ProfileName = "default"
   } else {
     $ProfileName = $ProfileItem.Value
@@ -87,6 +96,9 @@ function Set-AWSCurrentProfile {
       Save the updated profile into the user's environment variables so that it persists
       across PowerShell restarts.
 
+    .PARAMETER Quiet
+      Suppress informational output.
+
     .LINK
       https://www.github.com/jonscheiding/posh-awsprofile
   #>
@@ -97,24 +109,26 @@ function Set-AWSCurrentProfile {
     [Parameter(Mandatory=$true, ParameterSetName='Clear-Profile')]
     [switch]$Clear,
     [Parameter()]
-    [switch]$Persist
+    [switch]$Persist,
+    [Parameter()]
+    [switch] $Quiet
   )
 
   switch($PSCmdlet.ParameterSetName) {
     "Clear-Profile" {
       $ProfileName = $null
-      Write-Host "Clearing profile setting for current session."
+      if(!$Quiet) { Write-Host "Clearing profile setting for current session." }
       Remove-Item -ErrorAction Ignore Env:AWS_PROFILE
     }
     "Set-Profile" {
       Test-AWSProfile -ProfileName $ProfileName | Out-Null
-      Write-Host "Setting profile for current session to '$ProfileName'."
+      if(!$Quiet) { Write-Host "Setting profile for current session to '$ProfileName'." }
       Set-Item Env:AWS_PROFILE $ProfileName
     }
   }
 
   if(!$Persist) {
-    Write-Host "To change the profile setting for future sessions, run this command with the -Persist argument."
+    if(!$Quiet) { Write-Host "To change the profile setting for future sessions, run this command with the -Persist argument." }
     return
   }
 
@@ -123,7 +137,7 @@ function Set-AWSCurrentProfile {
     return
   }
 
-  Write-Host "Updating user environment variable to change profile setting for future sessions."
+  if(!$Quiet) { Write-Host "Updating user environment variable to change profile setting for future sessions." }
   [System.Environment]::SetEnvironmentVariable(
     "AWS_PROFILE", $ProfileName, 
     [System.EnvironmentVariableTarget]::User)
@@ -181,7 +195,7 @@ function Test-AWSProfile {
   $AvailableProfiles = Get-AWSAvailableProfiles
 
   if($AvailableProfiles.Length -eq 0 -or !$AvailableProfiles.Contains($ProfileName)) {
-    Write-Warning "No configuration found for profile '$($ProfileName)'."
+    Write-Warning "No configuration found for AWS profile '$($ProfileName)'."
     return $false
   }
 
