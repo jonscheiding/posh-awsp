@@ -234,7 +234,7 @@ function Switch-AWSProfile {
   if($ProfileName -eq 0) {
     Write-Host "Leaving profile as '$CurrentProfile'."
   } elseif([string]::IsNullOrEmpty($ProfileName)) {
-    Set-AWSCurrentProfile -Clear -NoPersist:$NoPersist
+    Set-AWSCurrentProfile -Clear -Persist:$Persist
   } else {
     Set-AWSCurrentProfile -ProfileName $ProfileName -Persist:$Persist
   }
