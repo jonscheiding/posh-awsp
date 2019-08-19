@@ -118,6 +118,11 @@ function Set-AWSCurrentProfile {
     return
   }
 
+  if(!$IsWindows) {
+    Write-Warning "The -Persist argument is not supported on non-Windows platforms."
+    return
+  }
+
   Write-Host "Updating user environment variable to change profile setting for future sessions."
   [System.Environment]::SetEnvironmentVariable(
     "AWS_PROFILE", $ProfileName, 
@@ -222,7 +227,7 @@ function Switch-AWSProfile {
   
     if($AvailableProfiles.Length -eq 0) {
       Write-Error "There are no profiles configured."
-      return
+      return 1
     }
 
     Write-Host `

@@ -18,6 +18,37 @@
 
 posh-awsp is a PowerShell module that makes it easier to manage multiple AWS CLI profiles.  It interacts with your AWS config file (located by default at `~/.aws/config`) and the `AWS_PROFILE` environment variable, which is used by the AWS CLI and PowerShell cmdlets to control which profile to use.
 
+This tool is useful in the specific scenario where you need to interact with multiple different AWS accounts, either with different credentials or with different assumed roles; or, with different AWS regions.  It assumes you have configured your AWS CLI config and credentials files with multiple named profiles.  Ths is described in detail in [AWS's documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html), but here is a brief example:
+
+`~/.aws/config`
+```
+[profile development]
+region = us-east-1
+[profile development/other-region]
+source_profile = development
+region = us-east-2
+[profile development/assumed-role]
+source_profile = development
+role_arn = arn:aws:iam:123456789000:role/SomeAssumedRole
+[profile production]
+region = us-east-1
+[default]
+region = us-east-1
+```
+
+`~/.aws/credentials`
+```
+[development]
+aws_access_key_id=AKIAIOSFODNNEXAMPLE1
+aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCEXAMPLEKEY1
+[production]
+aws_access_key_id=AKIAIOSFODNNEXAMPLE2
+aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCEXAMPLEKEY2
+[default]
+aws_access_key_id=AKIAIOSFODNNEXAMPLE3
+aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCEXAMPLEKEY3
+```
+
 ## Installation
 
 posh-awsp is available in the [PowerShell Gallery](https://www.powershellgallery.com/packages/posh-awsp), and can be installed with the following command:
