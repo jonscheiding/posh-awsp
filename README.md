@@ -21,7 +21,8 @@ posh-awsp is a PowerShell module that makes it easier to manage multiple AWS CLI
 This tool is useful in the specific scenario where you need to interact with multiple different AWS accounts, either with different credentials or with different assumed roles; or, with different AWS regions.  It assumes you have configured your AWS CLI config and credentials files with multiple named profiles.  Ths is described in detail in [AWS's documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html), but here is a brief example:
 
 `~/.aws/config`
-```
+
+```ini
 [profile development]
 region = us-east-1
 [profile development/other-region]
@@ -37,7 +38,8 @@ region = us-east-1
 ```
 
 `~/.aws/credentials`
-```
+
+```ini
 [development]
 aws_access_key_id=AKIAIOSFODNNEXAMPLE1
 aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCEXAMPLEKEY1
