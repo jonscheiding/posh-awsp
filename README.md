@@ -59,6 +59,8 @@ posh-awsp is available in the [PowerShell Gallery](https://www.powershellgallery
 Install-Module posh-awsp
 ```
 
+You might also consider installing my other module, [posh-awsvault](https://github.com/jonscheiding/posh-awsvault), if you want secure credential management with [aws-vault](https://github.com/99designs/aws-vault).
+
 ## Quick Start
 
 To select a profile:
