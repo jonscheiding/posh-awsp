@@ -22,7 +22,7 @@ function Get-AWSConfigFile {
     # the default location as documented in the AWS CLI docs.
     #
     $Home = $Env:HOME
-    
+
     if($null -eq $Home) {
       $Home = $Env:HOMEDRIVE + $Env:HOMEPATH
     }
@@ -86,8 +86,13 @@ function Set-AWSCurrentProfile {
       This manipulates the value of the AWS_PROFILE environment variable. If the provided
       value does not exist as a configured AWS CLI profile, a warning will be displayed.
 
+      If profile has default region is set, then AWS_REGION environment variable is also updated.
+
     .PARAMETER ProfileName
       Set the profile to this value.
+
+    .PARAMETER ProfileRegion
+      Set the region to this value.
 
     .PARAMETER Clear
       Clear the selected profile.
@@ -106,6 +111,8 @@ function Set-AWSCurrentProfile {
   Param(
     [Parameter(Mandatory=$true, Position=0, ParameterSetName='Set-Profile')]
     [string]$ProfileName,
+    [Parameter(Mandatory=$true, Position=1, ParameterSetName='Set-Profile')]
+    [string]$ProfileRegion,
     [Parameter(Mandatory=$true, ParameterSetName='Clear-Profile')]
     [switch]$Clear,
     [Parameter()]
@@ -113,6 +120,8 @@ function Set-AWSCurrentProfile {
     [Parameter()]
     [switch] $Quiet
   )
+
+  Write-Host ''
 
   switch($PSCmdlet.ParameterSetName) {
     "Clear-Profile" {
@@ -124,6 +133,9 @@ function Set-AWSCurrentProfile {
       Test-AWSProfile -ProfileName $ProfileName | Out-Null
       if(!$Quiet) { Write-Host "Setting profile for current session to '$ProfileName'." }
       Set-Item Env:AWS_PROFILE $ProfileName
+
+      if(!$Quiet) { Write-Host "Setting profile region for current session to '$ProfileRegion'." }
+      Set-Item Env:AWS_REGION $ProfileRegion
     }
   }
 
@@ -139,7 +151,11 @@ function Set-AWSCurrentProfile {
 
   if(!$Quiet) { Write-Host "Updating user environment variable to change profile setting for future sessions." }
   [System.Environment]::SetEnvironmentVariable(
-    "AWS_PROFILE", $ProfileName, 
+    "AWS_PROFILE", $ProfileName,
+    [System.EnvironmentVariableTarget]::User)
+
+  [System.Environment]::SetEnvironmentVariable(
+    "AWS_REGION", $ProfileRegion,
     [System.EnvironmentVariableTarget]::User)
 }
 
@@ -166,11 +182,97 @@ function Get-AWSAvailableProfiles {
   $AwsConfig = Get-Content $AwsConfigFile
   $Profiles = $AwsConfig `
     | Select-String -Pattern "^\s*\[\s*(profile\s*(?<profile>.*)|(?<profile>default))\s*\]\s*$" `
-    | ForEach-Object { 
+    | ForEach-Object {
         $_.Matches[0].Groups["profile"].Value
       }
 
   return $Profiles
+}
+
+function Get-AWSRegionForProfile {
+  <#
+    .SYNOPSIS
+      Get the region value for a profile
+
+    .DESCRIPTION
+      Get the region from a named profile, as returned by Get-AWSConfigFile.
+      If region not set, then returns null
+      If that file does not exist, a warning is displayed.
+
+    .LINK
+      https://www.github.com/jonscheiding/posh-awsprofile
+  #>
+
+  Param(
+    [Parameter(Mandatory=$true, Position=0)]
+    [string]$ProfileName
+  )
+
+  function Get-IniFile
+  {
+      param(
+          [parameter(Mandatory = $true)] [string] $filePath
+      )
+
+      $anonymous = "NoSection"
+
+      $ini = @{}
+      switch -regex -file $filePath
+      {
+          "^\[(.+)\]$" # Section
+          {
+              $section = $matches[1]
+              $ini[$section] = @{}
+              $CommentCount = 0
+          }
+
+          "^(;.*)$" # Comment
+          {
+              if (!($section))
+              {
+                  $section = $anonymous
+                  $ini[$section] = @{}
+              }
+              $value = $matches[1]
+              $CommentCount = $CommentCount + 1
+              $name = "Comment" + $CommentCount
+              $ini[$section][$name] = $value
+          }
+
+          "(.+?)\s*=\s*(.*)" # Key
+          {
+              if (!($section))
+              {
+                  $section = $anonymous
+                  $ini[$section] = @{}
+              }
+              $name,$value = $matches[1..2]
+              $ini[$section][$name] = $value
+          }
+      }
+
+      return $ini
+  }
+
+  $AwsConfigFile = Get-AWSConfigFile
+
+  if(!(Test-Path $AwsConfigFile -PathType Leaf)) {
+    Write-Warning "AWS CLI config file $AwsConfigFile doesn't exist.  Run 'aws configure' to create it."
+    return $null
+  }
+
+  $AwsConfigIni = Get-IniFile $AwsConfigFile
+
+  if ($ProfileName -ne 'default') {
+    $ProfileName = "profile $ProfileName"
+  }
+
+  $Region = $null
+  if ($AwsConfigIni.ContainsKey($ProfileName)) {
+    $Region = $AwsConfigIni[$ProfileName].region
+  }
+
+  return $Region
 }
 
 function Test-AWSProfile {
@@ -235,10 +337,11 @@ function Switch-AWSProfile {
     [switch] $Persist
   )
 
+  $ProfileRegion = ''
   if([string]::IsNullOrEmpty($ProfileName)) {
     $AvailableProfiles = Get-AWSAvailableProfiles
     $CurrentProfile = Get-AWSCurrentProfile
-  
+
     if($AvailableProfiles.Length -eq 0) {
       Write-Error "There are no profiles configured."
       return 1
@@ -248,6 +351,7 @@ function Switch-AWSProfile {
       "Press Delete to clear your profile setting.`nPress Escape to cancel."
 
     $ProfileName = Read-MenuSelection -Items $AvailableProfiles -CurrentItem $CurrentProfile
+    $ProfileRegion = Get-AWSRegionForProfile -ProfileName $ProfileName
   }
 
   if($ProfileName -eq 0) {
@@ -255,7 +359,7 @@ function Switch-AWSProfile {
   } elseif([string]::IsNullOrEmpty($ProfileName)) {
     Set-AWSCurrentProfile -Clear -Persist:$Persist
   } else {
-    Set-AWSCurrentProfile -ProfileName $ProfileName -Persist:$Persist
+    Set-AWSCurrentProfile -ProfileName $ProfileName -ProfileRegion $ProfileRegion -Persist:$Persist
   }
 
   Write-Host ""
@@ -287,8 +391,9 @@ function Read-MenuSelection {
   #
   for($i = 0; $i -lt $Items.Length; $i++) {
     $Indicator = if ($CurrentIndex -eq $i) { "*" } else { " " }
+    $Name = if ($CurrentIndex -eq $i) { "`e[36m$($Items[$i])`e[0m" } else { "$($Items[$i])" }
     $Index = if ($i -lt 10) { $i } else { " " }
-    Write-Host "$Indicator $Index $($Items[$i])"
+    Write-Host "$Indicator $Index $Name"
   }
 
   #
@@ -300,7 +405,7 @@ function Read-MenuSelection {
   while($null -eq $SelectedItem) {
     $MoveBy = 0
     $Key = [Console]::ReadKey($true)
-    
+
     switch($Key.Key) {
       "UpArrow"   { if ($CurrentIndex -gt 0) { $MoveBy = -1 } }
       "DownArrow" { if ($CurrentIndex -lt $Items.Length - 1) { $MoveBy = 1 } }
@@ -321,10 +426,10 @@ function Read-MenuSelection {
       # If [ or ] was pressed, update where the * indicator is shown.
       #
       [Console]::SetCursorPosition(0, $CursorTop + $CurrentIndex)
-      Write-Host -NoNewline " "
+      Write-Host -NoNewline "  $CurrentIndex $($Items[$CurrentIndex])"
       $CurrentIndex += $MoveBy
       [Console]::SetCursorPosition(0, $CursorTop + $CurrentIndex)
-      Write-Host -NoNewline "*"
+      Write-Host -NoNewline "* $CurrentIndex `e[36m$($Items[$CurrentIndex])`e[0m"
       [Console]::SetCursorPosition(0, $CursorTop + $Items.Length)
     }
   }
@@ -340,9 +445,9 @@ function Test-IsWindows {
     .LINK
       https://www.github.com/jonscheiding/posh-awsprofile
   #>
- 
+
   if(!(Get-Variable -Name IsWindows -ErrorAction SilentlyContinue)) {
-    # 
+    #
     # No $IsWindows variable means we're on PowerShell Core 5.1 or
     # PowerShell Desktop, both of which are Windows-only.
     #
@@ -352,4 +457,4 @@ function Test-IsWindows {
   return $IsWindows
 }
 
-New-Alias -Name awsp -Value Switch-AWSProfile
+New-Alias -Name awsp -Value Switch-AWSProfile -Force
