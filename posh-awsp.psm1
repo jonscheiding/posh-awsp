@@ -128,6 +128,7 @@ function Set-AWSCurrentProfile {
       $ProfileName = $null
       if(!$Quiet) { Write-Host "Clearing profile setting for current session." }
       Remove-Item -ErrorAction Ignore Env:AWS_PROFILE
+      Remove-Item -ErrorAction Ignore Env:AWS_REGION
     }
     "Set-Profile" {
       Test-AWSProfile -ProfileName $ProfileName | Out-Null
