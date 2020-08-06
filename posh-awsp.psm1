@@ -23,12 +23,12 @@ function Get-AWSConfigFile {
     #
     $AwsHome = $Env:HOME
 
-    if($null -eq $Home) {
+    if($null -eq $AwsHome) {
       $AwsHome = $Env:HOMEDRIVE + $Env:HOMEPATH
     }
 
     if($null -eq $AwsHome) {
-      Write-Warning "Could not determine user's home directory."
+      Write-Error "Could not determine user's home directory."
       return $null
     }
 
@@ -174,6 +174,10 @@ function Get-AWSAvailableProfiles {
   #>
 
   $AwsConfigFile = Get-AWSConfigFile
+  if ($null -eq $AwsConfigFile) {
+    Write-Error "Cannot find AWS config file"
+    return $null
+  }
 
   $NoSection = "NoSection"
 
@@ -291,20 +295,23 @@ function Switch-AWSProfile {
       return 1
     }
 
-    Write-Host `
-      "Press Delete to clear your profile setting.`nPress Escape to cancel."
+    Write-Host "`nPress `e[31mDelete`e[0m to clear your profile setting."
+    Write-Host "Press `e[33mEscape`e[0m to cancel."
 
     $SelectedProfile = Read-MenuSelection -Items $AvailableProfiles -CurrentItem $CurrentProfile
   } else {
     $SelectedProfile = $AvailableProfiles | Where-Object { $_.Name -eq $ProfileName } Select-Object -First 1
   }
 
+  if("esc" -eq $SelectedProfile) {
+    Write-Host "Leaving profile as '$CurrentProfile'."
+    return
+  }
+  
   if($null -ne $SelectedProfile) {
     Set-AWSCurrentProfile -ProfileName $SelectedProfile.Name -ProfileRegion $SelectedProfile.Region -Persist:$Persist
-  } elseif([string]::IsNullOrEmpty($ProfileName)) {
-    Set-AWSCurrentProfile -Clear -Persist:$Persist
   } else {
-    Write-Host "Leaving profile as '$CurrentProfile'."
+    Set-AWSCurrentProfile -Clear -Persist:$Persist
   }
 
   Write-Host ""
@@ -366,7 +373,7 @@ function Read-MenuSelection {
       "UpArrow"   { if ($CurrentIndex -gt 0) { $MoveBy = -1 } }
       "DownArrow" { if ($CurrentIndex -lt $Items.Length - 1) { $MoveBy = 1 } }
       "Enter"     { $SelectedItem = $Items[$CurrentIndex] }
-      "Escape"    { return $null }
+      "Escape"    { return "esc" }
       "Delete"    { return $null }
     }
 
