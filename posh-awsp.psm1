@@ -86,13 +86,8 @@ function Set-AWSCurrentProfile {
       This manipulates the value of the AWS_PROFILE environment variable. If the provided
       value does not exist as a configured AWS CLI profile, a warning will be displayed.
 
-      If profile has default region is set, then AWS_REGION environment variable is also updated.
-
     .PARAMETER ProfileName
       Set the profile to this value.
-
-    .PARAMETER ProfileRegion
-      Set the region to this value.
 
     .PARAMETER Clear
       Clear the selected profile.
@@ -111,8 +106,6 @@ function Set-AWSCurrentProfile {
   Param(
     [Parameter(Mandatory=$true, Position=0, ParameterSetName='Set-Profile')]
     [string]$ProfileName,
-    [Parameter(Mandatory=$true, Position=1, ParameterSetName='Set-Profile')]
-    [string]$ProfileRegion,
     [Parameter(Mandatory=$true, ParameterSetName='Clear-Profile')]
     [switch]$Clear,
     [Parameter()]
@@ -128,15 +121,11 @@ function Set-AWSCurrentProfile {
       $ProfileName = $null
       if(!$Quiet) { Write-Host "Clearing profile setting for current session." }
       Remove-Item -ErrorAction Ignore Env:AWS_PROFILE
-      Remove-Item -ErrorAction Ignore Env:AWS_REGION
     }
     "Set-Profile" {
       Test-AWSProfile -ProfileName $ProfileName | Out-Null
       if(!$Quiet) { Write-Host "Setting profile for current session to '$ProfileName'." }
       Set-Item Env:AWS_PROFILE $ProfileName
-
-      if(!$Quiet) { Write-Host "Setting profile region for current session to '$ProfileRegion'." }
-      Set-Item Env:AWS_REGION $ProfileRegion
     }
   }
 
@@ -153,10 +142,6 @@ function Set-AWSCurrentProfile {
   if(!$Quiet) { Write-Host "Updating user environment variable to change profile setting for future sessions." }
   [System.Environment]::SetEnvironmentVariable(
     "AWS_PROFILE", $ProfileName,
-    [System.EnvironmentVariableTarget]::User)
-
-  [System.Environment]::SetEnvironmentVariable(
-    "AWS_REGION", $ProfileRegion,
     [System.EnvironmentVariableTarget]::User)
 }
 
@@ -309,7 +294,7 @@ function Switch-AWSProfile {
   }
   
   if($null -ne $SelectedProfile) {
-    Set-AWSCurrentProfile -ProfileName $SelectedProfile.Name -ProfileRegion $SelectedProfile.Region -Persist:$Persist
+    Set-AWSCurrentProfile -ProfileName $SelectedProfile.Name -Persist:$Persist
   } else {
     Set-AWSCurrentProfile -Clear -Persist:$Persist
   }
