@@ -21,14 +21,14 @@ function Get-AWSConfigFile {
     # If the environment variable is not configured, calculate
     # the default location as documented in the AWS CLI docs.
     #
-    $Home = $Env:HOME
-    
-    if($null -eq $Home) {
-      $Home = $Env:HOMEDRIVE + $Env:HOMEPATH
+    $AwsHome = $Env:HOME
+
+    if($null -eq $AwsHome) {
+      $AwsHome = $Env:HOMEDRIVE + $Env:HOMEPATH
     }
 
-    if($null -eq $Home) {
-      Write-Warning "Could not determine user's home directory."
+    if($null -eq $AwsHome) {
+      Write-Error "Could not determine user's home directory."
       return $null
     }
 
@@ -114,6 +114,8 @@ function Set-AWSCurrentProfile {
     [switch] $Quiet
   )
 
+  Write-Host ''
+
   switch($PSCmdlet.ParameterSetName) {
     "Clear-Profile" {
       $ProfileName = $null
@@ -139,7 +141,7 @@ function Set-AWSCurrentProfile {
 
   if(!$Quiet) { Write-Host "Updating user environment variable to change profile setting for future sessions." }
   [System.Environment]::SetEnvironmentVariable(
-    "AWS_PROFILE", $ProfileName, 
+    "AWS_PROFILE", $ProfileName,
     [System.EnvironmentVariableTarget]::User)
 }
 
@@ -157,20 +159,54 @@ function Get-AWSAvailableProfiles {
   #>
 
   $AwsConfigFile = Get-AWSConfigFile
-
-  if(!(Test-Path $AwsConfigFile -PathType Leaf)) {
-    Write-Warning "AWS CLI config file $AwsConfigFile doesn't exist.  Run 'aws configure' to create it."
-    return @()
+  if ($null -eq $AwsConfigFile) {
+    Write-Error "Cannot find AWS config file"
+    return $null
   }
 
-  $AwsConfig = Get-Content $AwsConfigFile
-  $Profiles = $AwsConfig `
-    | Select-String -Pattern "^\s*\[\s*(profile\s*(?<profile>.*)|(?<profile>default))\s*\]\s*$" `
-    | ForEach-Object { 
-        $_.Matches[0].Groups["profile"].Value
-      }
+  $NoSection = "NoSection"
 
-  return $Profiles
+  $IniFile = [ordered]@{}
+  switch -regex -file $AwsConfigFile
+  {
+    "^\[(.+)\]$" # Section
+    {
+      $Section = $matches[1] -Replace 'profile ',''
+      $IniFile[$Section] = @{}
+      $CommentCount = 0
+    }
+
+    "^(;.*)$" # Comment
+    {
+      if (!($Section))
+      {
+          $Section = $NoSection
+          $IniFile[$Section] = @{}
+      }
+      $Value = $matches[1]
+      $CommentCount = $CommentCount + 1
+      $Name = "Comment" + $CommentCount
+      $IniFile[$Section][$Name] = $Value
+    }
+
+    "(.+?)\s*=\s*(.*)" # Key
+    {
+      if (!($Section))
+      {
+          $Section = $NoSection
+          $IniFile[$Section] = @{}
+      }
+      $Name,$Value = $matches[1..2]
+      $IniFile[$Section][$Name] = $Value
+    }
+  }
+
+  $AwsProfiles = @()
+  foreach ($ProfileName in $IniFile.Keys) {
+    $AwsProfiles += @{ Name = $ProfileName; Region = $IniFile[$ProfileName]['region']}
+  }
+
+  return $AwsProfiles
 }
 
 function Test-AWSProfile {
@@ -192,9 +228,9 @@ function Test-AWSProfile {
     $ProfileName
   )
 
-  $AvailableProfiles = Get-AWSAvailableProfiles
+  $AvailableProfileNames = Get-AWSAvailableProfiles | ForEach-Object { $_.Name }
 
-  if($AvailableProfiles.Length -eq 0 -or !$AvailableProfiles.Contains($ProfileName)) {
+  if($AvailableProfileNames.Length -eq 0 -or !$AvailableProfileNames.Contains($ProfileName)) {
     Write-Warning "No configuration found for AWS profile '$($ProfileName)'."
     return $false
   }
@@ -235,27 +271,32 @@ function Switch-AWSProfile {
     [switch] $Persist
   )
 
+  $AvailableProfiles = Get-AWSAvailableProfiles
   if([string]::IsNullOrEmpty($ProfileName)) {
-    $AvailableProfiles = Get-AWSAvailableProfiles
     $CurrentProfile = Get-AWSCurrentProfile
-  
+
     if($AvailableProfiles.Length -eq 0) {
       Write-Error "There are no profiles configured."
       return 1
     }
 
-    Write-Host `
-      "Press Delete to clear your profile setting.`nPress Escape to cancel."
+    Write-Host "`nPress `e[31mDelete`e[0m to clear your profile setting."
+    Write-Host "Press `e[33mEscape`e[0m to cancel."
 
-    $ProfileName = Read-MenuSelection -Items $AvailableProfiles -CurrentItem $CurrentProfile
+    $SelectedProfile = Read-MenuSelection -Items $AvailableProfiles -CurrentItem $CurrentProfile
+  } else {
+    $SelectedProfile = $AvailableProfiles | Where-Object { $_.Name -eq $ProfileName } Select-Object -First 1
   }
 
-  if($ProfileName -eq 0) {
+  if("esc" -eq $SelectedProfile) {
     Write-Host "Leaving profile as '$CurrentProfile'."
-  } elseif([string]::IsNullOrEmpty($ProfileName)) {
-    Set-AWSCurrentProfile -Clear -Persist:$Persist
+    return
+  }
+  
+  if($null -ne $SelectedProfile) {
+    Set-AWSCurrentProfile -ProfileName $SelectedProfile.Name -Persist:$Persist
   } else {
-    Set-AWSCurrentProfile -ProfileName $ProfileName -Persist:$Persist
+    Set-AWSCurrentProfile -Clear -Persist:$Persist
   }
 
   Write-Host ""
@@ -281,14 +322,26 @@ function Read-MenuSelection {
   $CurrentIndex = $Items.IndexOf($CurrentItem)
   if($CurrentIndex -lt 0) { $CurrentIndex = 0 }
 
+  function Get-ProfileName {
+    Param(
+      [Parameter(Mandatory = $true)] $Index
+    )
+
+    if ($null -eq $Items[$Index].Region) {
+      return "$($Items[$Index].Name)"
+    }
+    return "$($Items[$Index].Name) ($($Items[$Index].Region))"
+  }
+
   #
   # Initially write out the menu items, including a * indicator
   # to point out the currently set profile.
   #
   for($i = 0; $i -lt $Items.Length; $i++) {
     $Indicator = if ($CurrentIndex -eq $i) { "*" } else { " " }
+    $Name = if ($CurrentIndex -eq $i) { "`e[36m$(Get-ProfileName $i)`e[0m" } else { "$(Get-ProfileName $i)" }
     $Index = if ($i -lt 10) { $i } else { " " }
-    Write-Host "$Indicator $Index $($Items[$i])"
+    Write-Host "$Indicator $Index $Name"
   }
 
   #
@@ -300,12 +353,12 @@ function Read-MenuSelection {
   while($null -eq $SelectedItem) {
     $MoveBy = 0
     $Key = [Console]::ReadKey($true)
-    
+
     switch($Key.Key) {
       "UpArrow"   { if ($CurrentIndex -gt 0) { $MoveBy = -1 } }
       "DownArrow" { if ($CurrentIndex -lt $Items.Length - 1) { $MoveBy = 1 } }
       "Enter"     { $SelectedItem = $Items[$CurrentIndex] }
-      "Escape"    { return 0 }
+      "Escape"    { return "esc" }
       "Delete"    { return $null }
     }
 
@@ -321,10 +374,10 @@ function Read-MenuSelection {
       # If [ or ] was pressed, update where the * indicator is shown.
       #
       [Console]::SetCursorPosition(0, $CursorTop + $CurrentIndex)
-      Write-Host -NoNewline " "
+      Write-Host -NoNewline "  $CurrentIndex $(Get-ProfileName $CurrentIndex)"
       $CurrentIndex += $MoveBy
       [Console]::SetCursorPosition(0, $CursorTop + $CurrentIndex)
-      Write-Host -NoNewline "*"
+      Write-Host -NoNewline "* $CurrentIndex `e[36m$(Get-ProfileName $CurrentIndex)`e[0m"
       [Console]::SetCursorPosition(0, $CursorTop + $Items.Length)
     }
   }
@@ -340,9 +393,9 @@ function Test-IsWindows {
     .LINK
       https://www.github.com/jonscheiding/posh-awsprofile
   #>
- 
+
   if(!(Get-Variable -Name IsWindows -ErrorAction SilentlyContinue)) {
-    # 
+    #
     # No $IsWindows variable means we're on PowerShell Core 5.1 or
     # PowerShell Desktop, both of which are Windows-only.
     #
@@ -352,4 +405,4 @@ function Test-IsWindows {
   return $IsWindows
 }
 
-New-Alias -Name awsp -Value Switch-AWSProfile
+New-Alias -Name awsp -Value Switch-AWSProfile -Force

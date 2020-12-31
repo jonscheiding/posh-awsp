@@ -9,8 +9,8 @@ Describe "Get-AWSCurrentProfile" {
     }
 
     It "Returns 'default'" {
-      $profile = Get-AWSCurrentProfile
-      $profile | Should Be "default"
+      $awsProfile = Get-AWSCurrentProfile
+      $awsProfile | Should -Be "default"
     }
 
     AfterEach {
@@ -25,8 +25,8 @@ Describe "Get-AWSCurrentProfile" {
     }
 
     It "Returns the specified profile" {
-      $profile = Get-AWSCurrentProfile
-      $profile | Should Be "some_profile"
+      $awsProfile = Get-AWSCurrentProfile
+      $awsProfile | Should -Be "some_profile"
     }
 
     AfterEach {

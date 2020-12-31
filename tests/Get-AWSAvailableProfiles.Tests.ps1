@@ -21,7 +21,7 @@ Describe "Get-AWSAvailableProfiles" {
   It "Contains the '<ProfileName>' profile" -TestCases $TestCases {
     param ($ProfileName)
 
-    $Profiles = Get-AWSAvailableProfiles
+    $Profiles = Get-AWSAvailableProfiles | ForEach-Object { $_.Name }
     $ProfileName | Should -BeIn $Profiles
   }
 

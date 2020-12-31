@@ -9,12 +9,12 @@ Describe "Set-AWSCurrentProfile" {
 
   It "Sets the specified profile when one is provided" {
     Set-AWSCurrentProfile -ProfileName "some_other_profile"
-    $Env:AWS_PROFILE | Should Be "some_other_profile"
+    $Env:AWS_PROFILE | Should -Be "some_other_profile"
   }
 
   It "Clears the profile when the -Clear parameter is provided" {
     Set-AWSCurrentProfile -Clear
-    $Env:AWS_PROFILE | Should Be $null
+    $Env:AWS_PROFILE | Should -Be $null
   }
 
   AfterEach {

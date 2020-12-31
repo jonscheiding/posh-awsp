@@ -1,3 +1,5 @@
+#Requires -Modules @{ ModuleName = 'Pester'; ModuleVersion = '4.0.2' }
+
 $Result = Invoke-Pester -PassThru
 
 if($null -eq $Result) {
