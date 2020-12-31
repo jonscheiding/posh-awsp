@@ -13,6 +13,12 @@ Describe "Get-AWSAvailableProfiles" {
     @{ ProfileName = 'profile2' }
   )
 
+  It "Succeeds when there the AWS config file doesn't exist" {
+    Set-Item Env:AWS_CONFIG_FILE ".\tests\config.nonexistent"
+    $Profiles = Get-AWSAvailableProfiles
+    $Profiles.Length | Should -Be 0
+  }
+
   It "Contains 3 profiles" {
     $Profiles = Get-AWSAvailableProfiles
     $Profiles.Length | Should -Be 3
