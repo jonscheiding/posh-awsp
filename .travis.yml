@@ -1,28 +1,25 @@
 language: generic
 os: linux
 dist: xenial
-
 addons:
   apt:
     sources:
-    - sourceline: deb [arch=amd64] https://packages.microsoft.com/ubuntu/16.04/prod xenial main
+    - sourceline: deb [arch=amd64] https://packages.microsoft.com/ubuntu/16.04/prod
+        xenial main
       key_url: https://packages.microsoft.com/keys/microsoft.asc
     packages:
     - powershell
     - dotnet-sdk-2.2
-
 before_script:
 - pwsh -Command 'Install-Module -Force -Scope CurrentUser Pester'
-
 script:
 - pwsh -File ./build/run-tests.ps1
-
 deploy:
   provider: script
   on:
     tags: true
-  script: pwsh ./build/publish-module.ps1 -ModuleVersion $TRAVIS_TAG -NuGetApiKey $NUGET_API_KEY
-
+  script: pwsh ./build/publish-module.ps1 -ModuleVersion $TRAVIS_TAG -NuGetApiKey
+    $NUGET_API_KEY
 env:
   global:
-    secure: lmPNl+CBbZ+IEnoyGACtwzMZzjagWtsc90DVkzdpE2qivfpU2BANr/7JUmuvK5NJLyflg2o3vnGTCNzZCwdKmmzlRJ4B8E8nZstsTaaVW2JJU+MyJMxBtQFOE1IakuT3ydaHqz/D2dD9bsvMpUzC1gaX8H85cGW316TTRofEJcQW6twmImVNpXGzb9RHzXM0TwmN6owB5twy3sYRUeMmK5CTqPNuEdZiiZQ2tYuIReD/atRy0GKhCy7LFKwbp+mM/dgjU1gRrwjNkuxQ/16z6RmWhIV7c/s9wXsUsS9jzV2/+tvY09cg+RJfOFBqzvYl63GVi7vQ0GBK0Rh62RxaUEAqvZikzuZrxPo3Izr4+I/VxclL2YCirz9EItUKDJh/u8zz3vjf4y5j2YdyLMJHnp9NAap2KPGYxN86aTw5wMBnDe2Rub0sHKEqXtq5UpnCbbkuKoi3M2PNcOj0h+iqEfZW8PlG+GlGpJcc2HI1tDRcif4h1emgxF7R5k4sb13OfSIgHW+vNJfvwFL6SbslgfPv9gZHisQwCBcgtElQpZvpIW+/SjO5RxxQfs/Hm+/9+MzXdmeGCwpE5m0wGf+7LeNtEtAmDmp0Id/KrfvcvuKfzW1nG2cjGNeWd5z6SBKPDJnLmyeauGMgmHkNzoZqJ4s208L3t3xLWY7k3qbLamE=
+  - secure: "deB4DDEEJqyUY9W9Mn3R5eD6XgiGCafNYW7XBOFhYUq+idV2S14zkT5+syyfydW+AlnLh/0BUybb8YFbnUefzaPdfSuumgBlrjZzz8ofInuIBRnLQKdTIqSP4Sd9hx+bbkblIKEmBvHZt3+m3vWsYwNK82atYLs/Geavo035XIpXRsW/UJ58QIrMF+vjwBi/eUU8ztJYXfVd9GCMb9yAQy1JL5KNSfYkt6vqwWfOm1bii18xrQlpQo7T68SnDHk3qHLGVhwq6f8DjWjFYiq0UzjBVQrfXUFJY0m6g5RTKeNNAC+6/eE1lbbAI2UqpRqa5EMuFXJx6u+Dfp8+gYcYY42/zqCEqBJH3rsfO/IY1iclGOLXLf5atKp87Bvdueu8vbml/DKbdRLVRFr0Ke7u7oBsXfgB5hRhp5NUdR521PWVxzIu2oMs0rU4yPVXnYCZ4k9CaZcK4Apldi5dRWUYzdb243fY1KtnfKQ2m5iWACaa/AcnX/lvIdy+A4QT/yuuC2KlWuphrZU/N7Xg27rIqJuaVn1vCCW+WtRmrENG/1lhUUVk3ucFF2HPukl4iDsbFEnq67zz1/zjTb1o3GQPNdbSpuE0BQUoy7xT7cyzj4ouuslBzM/c6/hWoNM7duQs+peiK3ujEAEG9WffP9vX75NI75tANB/WPfZ/2j+m4ec="
