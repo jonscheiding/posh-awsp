@@ -164,6 +164,11 @@ function Get-AWSAvailableProfiles {
     return $null
   }
 
+  if(!(Test-Path $AwsConfigFile -PathType Leaf)) {
+    Write-Warning "AWS CLI config file $AwsConfigFile doesn't exist.  Run 'aws configure' to create it."
+    return @()
+  }
+
   $NoSection = "NoSection"
 
   $IniFile = [ordered]@{}
