@@ -1,18 +1,20 @@
 # posh-awsp
 
-[![Build Status](https://img.shields.io/travis/jonscheiding/posh-awsp.svg)](https://travis-ci.org/jonscheiding/posh-awsp)
+[![Build Status](https://github.com/jonscheiding/posh-awsp/actions/workflows/posh-awsp.yml/badge.svg)](https://github.com/jonscheiding/posh-awsp/actions/workflows/posh-awsp.yml)
 [![PowerShell Gallery](https://img.shields.io/powershellgallery/v/posh-awsp.svg)](https://www.powershellgallery.com/packages/posh-awsp)
 
 ## Table of contents
 
-- [Overview](#Overview)
-- [Installation](#Installation)
-- [Quick Start](#Quick-Start)
-- [Usage](#Usage)
-  - [Get-AWSCurrentProfile](#Get-AWSCurrentProfile)
-  - [Set-AWSCurrentProfile](#Set-AWSCurrentProfile)
-  - [Get-AWSAvailableProfiles](#Get-AWSAvailableProfiles)
-  - [Switch-AWSProfile](#Switch-AWSProfile)
+- [posh-awsp](#posh-awsp)
+  - [Table of contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Installation](#installation)
+  - [Quick Start](#quick-start)
+  - [Usage](#usage)
+    - [`Get-AWSCurrentProfile`](#get-awscurrentprofile)
+    - [`Set-AWSCurrentProfile`](#set-awscurrentprofile)
+    - [`Get-AWSAvailableProfiles`](#get-awsavailableprofiles)
+    - [`Switch-AWSProfile`](#switch-awsprofile)
 
 ## Overview
 
