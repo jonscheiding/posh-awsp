@@ -1,0 +1,29 @@
+name: posh-awsp build
+on: [push]
+jobs:
+  posh_awsp_build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Set up MS repository
+        # https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.5
+        run: |
+          source /etc/os-release
+          wget -q https://packages.microsoft.com/config/ubuntu/$VERSION_ID/packages-microsoft-prod.deb
+          sudo dpkg -i packages-microsoft-prod.deb
+          sudo apt-get update
+      - name: Install Powershell and .NET
+        run: |
+          sudo apt-get install -y powershell dotnet-sdk-8.0
+      - name: Install Pester
+        run: pwsh -Command 'Install-Module -Force -Scope CurrentUser Pester'
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Run tests
+        run: pwsh -File ./build/run-tests.ps1
+      - name: Determine version
+        uses: release-kit/semver@v2
+        id: version
+        if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+      - name: Publish version ${{ steps.version.outputs.full }}
+        if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+        run: pwsh ./build/publish-module.ps1 -ModuleVersion ${{ steps.version.outputs.full }} -NuGetApiKey ${{ secrets.NUGET_API_KEY }}
