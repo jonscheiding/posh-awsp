@@ -285,8 +285,8 @@ function Switch-AWSProfile {
       return 1
     }
 
-    Write-Host "`nPress `e[31mDelete`e[0m to clear your profile setting."
-    Write-Host "Press `e[33mEscape`e[0m to cancel."
+    Write-Host "`nPress $([char]27)[31mDelete$([char]27)[0m to clear your profile setting."
+    Write-Host "Press $([char]27)[33mEscape$([char]27)[0m to cancel."
 
     $SelectedProfile = Read-MenuSelection -Items @($AvailableProfiles) -CurrentItem $CurrentProfile
   } else {
