@@ -344,7 +344,7 @@ function Read-MenuSelection {
   #
   for($i = 0; $i -lt $Items.Length; $i++) {
     $Indicator = if ($CurrentIndex -eq $i) { "*" } else { " " }
-    $Name = if ($CurrentIndex -eq $i) { "`e[36m$(Get-ProfileName $i)`e[0m" } else { "$(Get-ProfileName $i)" }
+    $Name = if ($CurrentIndex -eq $i) { "$([char]27)[36m$(Get-ProfileName $i)$([char]27)[0m" } else { "$(Get-ProfileName $i)" }
     $Index = if ($i -lt 10) { $i } else { " " }
     Write-Host "$Indicator $Index $Name"
   }
@@ -382,7 +382,7 @@ function Read-MenuSelection {
       Write-Host -NoNewline "  $CurrentIndex $(Get-ProfileName $CurrentIndex)"
       $CurrentIndex += $MoveBy
       [Console]::SetCursorPosition(0, $CursorTop + $CurrentIndex)
-      Write-Host -NoNewline "* $CurrentIndex `e[36m$(Get-ProfileName $CurrentIndex)`e[0m"
+      Write-Host -NoNewline "* $CurrentIndex $([char]27)[36m$(Get-ProfileName $CurrentIndex)$([char]27)[0m"
       [Console]::SetCursorPosition(0, $CursorTop + $Items.Length)
     }
   }
